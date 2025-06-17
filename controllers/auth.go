@@ -126,3 +126,74 @@ func Me(c *fiber.Ctx) error {
 		},
 	})
 }
+
+// PATCH /api/me
+func UpdateProfile(c *fiber.Ctx) error {
+	userId := c.Locals("userId")
+	if userId == nil {
+		return c.Status(401).JSON(fiber.Map{"success": false, "message": "Unauthorized"})
+	}
+	var input struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid input"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	objId, err := primitive.ObjectIDFromHex(userId.(string))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid userId"})
+	}
+	update := bson.M{}
+	if input.Name != "" {
+		update["name"] = input.Name
+	}
+	if input.Email != "" {
+		update["email"] = strings.ToLower(input.Email)
+	}
+	if len(update) == 0 {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "No data to update"})
+	}
+	_, err = userCol.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to update profile"})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Profile updated"})
+}
+
+// PATCH /api/me/password
+func UpdatePassword(c *fiber.Ctx) error {
+	userId := c.Locals("userId")
+	if userId == nil {
+		return c.Status(401).JSON(fiber.Map{"success": false, "message": "Unauthorized"})
+	}
+	var input struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	if err := c.BodyParser(&input); err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid input"})
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	objId, err := primitive.ObjectIDFromHex(userId.(string))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid userId"})
+	}
+	var user models.User
+	err = userCol.FindOne(ctx, bson.M{"_id": objId}).Decode(&user)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"success": false, "message": "User not found"})
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.CurrentPassword)) != nil {
+		return c.Status(401).JSON(fiber.Map{"success": false, "message": "Current password is incorrect"})
+	}
+	hash, _ := bcrypt.GenerateFromPassword([]byte(input.NewPassword), bcrypt.DefaultCost)
+	_, err = userCol.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": bson.M{"password": string(hash)}})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to update password"})
+	}
+	return c.JSON(fiber.Map{"success": true, "message": "Password updated"})
+}

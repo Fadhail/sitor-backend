@@ -13,6 +13,8 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/register", controllers.Register)
 	api.Post("/login", controllers.Login)
 	api.Get("/me", middleware.JWTProtected(), controllers.Me)
+	api.Patch("/me", middleware.JWTProtected(), controllers.UpdateProfile)
+	api.Patch("/me/password", middleware.JWTProtected(), controllers.UpdatePassword)
 
 	// Group
 	api.Get("/groups", controllers.GetGroups)
