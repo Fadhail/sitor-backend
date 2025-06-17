@@ -13,6 +13,7 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/register", controllers.Register)
 	api.Post("/login", controllers.Login)
 	api.Get("/me", middleware.JWTProtected(), controllers.Me)
+	api.Get("/me/summary", middleware.JWTProtected(), controllers.MeSummary)
 	api.Patch("/me", middleware.JWTProtected(), controllers.UpdateProfile)
 	api.Patch("/me/password", middleware.JWTProtected(), controllers.UpdatePassword)
 
@@ -21,6 +22,8 @@ func SetupRoutes(app *fiber.App) {
 	api.Post("/groups", middleware.JWTProtected(), controllers.CreateGroup)
 	api.Post("/groups/join", middleware.JWTProtected(), controllers.JoinGroup)
 	api.Get("/groups/:id/members", middleware.JWTProtected(), controllers.ListGroupMembers)
+	api.Delete("/groups/:id", middleware.JWTProtected(), controllers.DeleteGroup)
+	api.Post("/groups/:id/leave", middleware.JWTProtected(), controllers.LeaveGroup)
 
 	// Detection
 	api.Post("/detections", middleware.JWTProtected(), controllers.CreateDetection)

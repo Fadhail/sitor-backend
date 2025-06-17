@@ -148,3 +148,59 @@ func ListGroupMembers(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{"success": true, "members": group.Members})
 }
+
+// DELETE /api/groups/:id
+func DeleteGroup(c *fiber.Ctx) error {
+	userId := c.Locals("userId")
+	if userId == nil {
+		return c.Status(401).JSON(fiber.Map{"success": false, "message": "Unauthorized"})
+	}
+	groupId := c.Params("id")
+	objGroupId, err := primitive.ObjectIDFromHex(groupId)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid groupId"})
+	}
+	var group models.Group
+	err = groupCol.FindOne(context.TODO(), bson.M{"_id": objGroupId}).Decode(&group)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"success": false, "message": "Group not found"})
+	}
+	if group.LeaderID.Hex() != userId.(string) {
+		return c.Status(403).JSON(fiber.Map{"success": false, "message": "Only the group leader can delete the group"})
+	}
+	_, err = groupCol.DeleteOne(context.TODO(), bson.M{"_id": objGroupId})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to delete group"})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}
+
+// POST /api/groups/:id/leave
+func LeaveGroup(c *fiber.Ctx) error {
+	userId := c.Locals("userId")
+	if userId == nil {
+		return c.Status(401).JSON(fiber.Map{"success": false, "message": "Unauthorized"})
+	}
+	groupId := c.Params("id")
+	objGroupId, err := primitive.ObjectIDFromHex(groupId)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid groupId"})
+	}
+	var group models.Group
+	err = groupCol.FindOne(context.TODO(), bson.M{"_id": objGroupId}).Decode(&group)
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"success": false, "message": "Group not found"})
+	}
+	if group.LeaderID.Hex() == userId.(string) {
+		return c.Status(403).JSON(fiber.Map{"success": false, "message": "Leader cannot leave the group. Please delete the group instead."})
+	}
+	userObjId, err := primitive.ObjectIDFromHex(userId.(string))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid userId"})
+	}
+	_, err = groupCol.UpdateOne(context.TODO(), bson.M{"_id": objGroupId}, bson.M{"$pull": bson.M{"members": userObjId}})
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to leave group"})
+	}
+	return c.JSON(fiber.Map{"success": true})
+}
