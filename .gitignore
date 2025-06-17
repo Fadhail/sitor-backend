@@ -1,0 +1,40 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (vendor/)
+vendor/
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# OS generated files
+Thumbs.db
+
+# Logs
+*.log
+
+# Config
+.env
+.env.*
+
+# Build
+bin/
+
+# Database
+*.db
+*.sqlite
+
+# Go modules cache
+/go/pkg/mod/
