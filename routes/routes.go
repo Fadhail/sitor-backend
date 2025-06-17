@@ -28,4 +28,8 @@ func SetupRoutes(app *fiber.App) {
 	// Detection
 	api.Post("/detections", middleware.JWTProtected(), controllers.CreateDetection)
 	api.Get("/detections/:groupId", middleware.JWTProtected(), controllers.GetDetectionsByGroup)
+
+	// Camera status
+	api.Post("/groups/:groupId/camera-status", middleware.JWTProtected(), controllers.UpdateCameraStatus)
+	api.Get("/groups/:groupId/camera-status", middleware.JWTProtected(), controllers.GetCameraStatus)
 }
