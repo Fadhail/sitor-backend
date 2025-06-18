@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"sitor-backend/config"
+	"sitor-backend/models"
 
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -92,7 +93,30 @@ func StartSession(c *fiber.Ctx) error {
 	res, err := db.Collection("groups").UpdateOne(ctx, bson.M{"_id": objGroupId}, bson.M{"$set": bson.M{"sessionActive": true}})
 	fmt.Println("[START-SESSION] group update matched:", res.MatchedCount, "modified:", res.ModifiedCount, "error:", err)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to start session", "error": err.Error()})
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to update group sessionActive", "error": err.Error()})
+	}
+
+	// Tambahkan log untuk memastikan update berhasil
+	var group models.Group
+	err = db.Collection("groups").FindOne(ctx, bson.M{"_id": objGroupId}).Decode(&group)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to fetch group after update", "error": err.Error()})
+	}
+	fmt.Println("[START-SESSION] sessionActive after update:", group.SessionActive)
+
+	// Ambil anggota grup
+	if len(group.Members) > 0 {
+		// Hapus status kamera lama (jika ada)
+		_, _ = db.Collection("camera_status").DeleteMany(ctx, bson.M{"groupId": objGroupId})
+		// Inisialisasi status kamera semua anggota ke isActive: false
+		for _, userId := range group.Members {
+			db.Collection("camera_status").InsertOne(ctx, bson.M{
+				"groupId":   objGroupId,
+				"userId":    userId,
+				"isActive":  false,
+				"updatedAt": time.Now(),
+			})
+		}
 	}
 
 	// (Opsional) Buat sesi baru di koleksi deteksi jika ingin tracking per sesi

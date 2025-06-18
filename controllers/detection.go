@@ -58,6 +58,8 @@ func CreateDetection(c *fiber.Ctx) error {
 		log.Printf("[CreateDetection] Failed to get user name: %v", err)
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to get user name"})
 	}
+	// Tambahkan log debug setiap request deteksi masuk
+	log.Printf("[CreateDetection] groupId=%s userId=%s emotions=%+v", body.GroupId, userIdStr, body.Emotions)
 	// Upsert: hanya satu data deteksi per user per grup
 	filter := bson.M{
 		"groupId": objGroupId,

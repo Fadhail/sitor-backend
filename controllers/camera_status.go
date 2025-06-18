@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"sitor-backend/config"
@@ -64,10 +65,14 @@ func GetCameraStatus(c *fiber.Ctx) error {
 		SessionActive bool `bson:"sessionActive"`
 	}
 	err = group.FindOne(context.Background(), bson.M{"_id": gid}).Decode(&groupDoc)
-	if err == nil && !groupDoc.SessionActive {
+	if err != nil {
+		return c.Status(404).JSON(fiber.Map{"success": false, "message": "Group not found"})
+	}
+	if !groupDoc.SessionActive {
 		return c.Status(410).JSON(fiber.Map{"success": false, "message": "Session has ended"})
 	}
 
+	// Ambil status kamera
 	cursor, err := cameraStatusCol.Find(context.Background(), bson.M{"groupId": gid})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to fetch camera status"})
@@ -76,5 +81,7 @@ func GetCameraStatus(c *fiber.Ctx) error {
 	if err := cursor.All(context.Background(), &statuses); err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to decode camera status"})
 	}
+	// Tambahkan log untuk debug
+	fmt.Println("[DEBUG] GetCameraStatus: sessionActive=", groupDoc.SessionActive, "jumlah status=", len(statuses))
 	return c.JSON(fiber.Map{"success": true, "statuses": statuses})
 }
