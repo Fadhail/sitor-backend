@@ -79,13 +79,14 @@ func CreateGroup(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid userId"})
 	}
 	group := models.Group{
-		ID:           primitive.NewObjectID(),
-		Name:         body.Name,
-		Description:  body.Description,
-		SecurityCode: hash,
-		LeaderID:     leaderObjId,
-		Members:      []primitive.ObjectID{leaderObjId},
-		CreatedAt:    time.Now(),
+		ID:            primitive.NewObjectID(),
+		Name:          body.Name,
+		Description:   body.Description,
+		SecurityCode:  hash,
+		LeaderID:      leaderObjId,
+		Members:       []primitive.ObjectID{leaderObjId},
+		CreatedAt:     time.Now(),
+		SessionActive: true, // Pastikan sesi aktif saat grup dibuat
 	}
 	_, err = groupCol.InsertOne(context.TODO(), group)
 	if err != nil {
@@ -120,9 +121,6 @@ func JoinGroup(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid userId"})
 	}
-	// Debug log: tampilkan userId dan daftar member grup
-	fmt.Println("[DEBUG] userId:", userObjId.Hex())
-	fmt.Println("[DEBUG] group members:")
 	for _, m := range group.Members {
 		if m.Hex() == userObjId.Hex() {
 			return c.Status(400).JSON(fiber.Map{"success": false, "message": "Already joined"})

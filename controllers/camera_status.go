@@ -56,6 +56,18 @@ func GetCameraStatus(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"success": false, "message": "Invalid groupId"})
 	}
+
+	// Cek status sesi grup
+	db := config.GetDB()
+	group := db.Collection("groups")
+	var groupDoc struct {
+		SessionActive bool `bson:"sessionActive"`
+	}
+	err = group.FindOne(context.Background(), bson.M{"_id": gid}).Decode(&groupDoc)
+	if err == nil && !groupDoc.SessionActive {
+		return c.Status(410).JSON(fiber.Map{"success": false, "message": "Session has ended"})
+	}
+
 	cursor, err := cameraStatusCol.Find(context.Background(), bson.M{"groupId": gid})
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"success": false, "message": "Failed to fetch camera status"})

@@ -2,17 +2,17 @@ package config
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"sync"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var DBName = "sitor"
 var UserCollection = "users"
-var MongoString string = os.Getenv("MONGOSTRING")
 
 var (
 	clientInstance      *mongo.Client
@@ -22,15 +22,27 @@ var (
 
 func getClient() *mongo.Client {
 	dbOnce.Do(func() {
-		clientInstance, clientInstanceError = mongo.Connect(context.TODO(), options.Client().ApplyURI(MongoString))
+		_ = godotenv.Load(".env")
+		mongoString := os.Getenv("MONGOSTRING")
+		if mongoString == "" {
+			log.Fatal("MONGOSTRING environment variable is not set")
+		}
+		clientInstance, clientInstanceError = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoString))
 		if clientInstanceError != nil {
-			fmt.Printf("MongoConnect: %v\n", clientInstanceError)
+			log.Fatalf("MongoConnect failed: %v", clientInstanceError)
 		}
 	})
+	if clientInstance == nil {
+		log.Fatal("MongoDB client is nil after connection attempt")
+	}
 	return clientInstance
 }
 
 // Helper to get default DB
 func GetDB() *mongo.Database {
-	return getClient().Database(DBName)
+	client := getClient()
+	if client == nil {
+		log.Fatal("MongoDB client is not initialized")
+	}
+	return client.Database(DBName)
 }

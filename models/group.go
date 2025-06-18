@@ -7,13 +7,14 @@ import (
 )
 
 type Group struct {
-	ID           primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	Name         string               `bson:"name" json:"name"`
-	Description  string               `bson:"description" json:"description"`
-	SecurityCode string               `bson:"securityCode" json:"securityCode"`
-	LeaderID     primitive.ObjectID   `bson:"leaderId" json:"leaderId"`
-	Members      []primitive.ObjectID `bson:"members" json:"members"`
-	CreatedAt    time.Time            `bson:"createdAt" json:"createdAt"`
+	ID            primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
+	Name          string               `bson:"name" json:"name"`
+	Description   string               `bson:"description" json:"description"`
+	SecurityCode  string               `bson:"securityCode" json:"securityCode"`
+	LeaderID      primitive.ObjectID   `bson:"leaderId" json:"leaderId"`
+	Members       []primitive.ObjectID `bson:"members" json:"members"`
+	CreatedAt     time.Time            `bson:"createdAt" json:"createdAt"`
+	SessionActive bool                 `bson:"sessionActive" json:"sessionActive"`
 }
 
 // Request struct khusus untuk join group
