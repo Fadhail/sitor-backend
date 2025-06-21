@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"sitor-backend/config"
+	"sitor-backend/controllers"
 	"sitor-backend/routes"
 
 	"github.com/gofiber/fiber/v2"
@@ -26,7 +27,8 @@ func main() {
 	}))
 
 	// Inisialisasi koneksi DB sekali saja
-	_ = config.GetDB()
+	db := config.GetDB()
+	controllers.InitChatHistoryCollection(db)
 
 	routes.SetupRoutes(app)
 

@@ -38,4 +38,8 @@ func SetupRoutes(app *fiber.App) {
 	// Camera status
 	api.Post("/groups/:groupId/camera-status", middleware.JWTProtected(), controllers.UpdateCameraStatus)
 	api.Get("/groups/:groupId/camera-status", middleware.JWTProtected(), controllers.GetCameraStatus)
+
+	// Chat history
+	api.Get("/chat-history", middleware.JWTProtected(), controllers.GetChatHistory)
+	api.Post("/chat-history", middleware.JWTProtected(), controllers.AddChatMessage)
 }
