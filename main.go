@@ -21,7 +21,7 @@ func main() {
 
 	// Tambahkan middleware CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "https://sitor.sket.site",
+		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 	}))
